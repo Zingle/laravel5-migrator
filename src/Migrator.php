@@ -64,7 +64,9 @@ class Migrator extends LaravelMigrator
      */
     private function requireFilesFromMigrations($migrations) {
         foreach($migrations as $migration) {
-            $this->files->requireOnce($migration->path.'/'.$migration->migration.'.php');
+            if($migration->path) {
+                $this->files->requireOnce($migration->path.'/'.$migration->migration.'.php');
+            }
         }
     }    
 }
