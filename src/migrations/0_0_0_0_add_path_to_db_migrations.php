@@ -12,7 +12,7 @@ class AddPathToDbMigrations extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE ? ADD COLUMN path VARCHAR(255) DEFAULT NULL AFTER migration ", [config('database.migrations')]);
+        DB::statement("ALTER TABLE " . config('database.migrations') . " ADD COLUMN path VARCHAR(255) DEFAULT NULL AFTER migration ");
     }
 
     /**
@@ -22,6 +22,6 @@ class AddPathToDbMigrations extends Migration
      */
     public function down()
     {
-        DB::statement("ALTER TABLE ? DELETE COLUMN path", [config('database.migrations')]);
+        DB::statement("ALTER TABLE " . config('database.migrations') . " DELETE COLUMN path");
     }
 }
