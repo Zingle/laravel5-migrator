@@ -6,7 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 class AddPathToDbMigrations extends Migration
 {
     /**
-     * Run the migrations.
+     * Add a 'path' column to the migrations table
      *
      * @return void
      */
@@ -16,7 +16,7 @@ class AddPathToDbMigrations extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Remove the path column
      *
      * @return void
      */

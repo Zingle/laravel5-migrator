@@ -43,6 +43,7 @@ class Migrator extends LaravelMigrator
     {
         $this->path = $path;
     }
+
     /**
      * Rollback the last migration operation. Overridden from parent to allow loading of files from the appropriate paths
      *
@@ -55,6 +56,7 @@ class Migrator extends LaravelMigrator
         $this->requireFilesFromMigrations($migrations);
         parent::rollback($pretend);
     }
+    
     /**
      * Use a migration record's path property to load its PHP file
      * @param  array $migrations  records from db_migrations table including a migration (filename) and path

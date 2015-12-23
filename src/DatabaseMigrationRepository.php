@@ -5,10 +5,12 @@ use Illuminate\Database\Migrations\DatabaseMigrationRepository as LaravelDatabas
 class DatabaseMigrationRepository extends LaravelDatabaseMigrationRepository
 {
     /**
-     * Log that a migration was run.
+     * Log that a migration was run. Overrides the parent method and allows
+     * insertion of path data
      *
      * @param  string  $file
      * @param  int     $batch
+     * @param  string  $path
      * @return void
      */
     public function log($file, $batch, $path = null)

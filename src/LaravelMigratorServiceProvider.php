@@ -7,7 +7,7 @@ class LaravelMigratorServiceProvider extends LaravelServiceProvider
 {
 
     /**
-     * Register the migration repository service.
+     * Override the Laravel repository service.
      *
      * @return void
      */
@@ -21,7 +21,7 @@ class LaravelMigratorServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * Override the laravel migrator singleton
+     * Override the Laravel migrator singleton
      *
      * @return void
      */
@@ -38,18 +38,7 @@ class LaravelMigratorServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * Override the Laravel Rollback command
-     *
-     * @return void
-     */
-    protected function registerRollbackCommand()
-    {
-        $this->app->singleton('command.migrate.rollback', function ($app) {
-            return new RollbackCommand($app['migrator']);
-        });
-    }  
-    /**
-     * Override the Laravel Rollback command
+     * Override the Laravel Migrate command
      *
      * @return void
      */
