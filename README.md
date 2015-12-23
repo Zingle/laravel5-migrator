@@ -16,11 +16,13 @@ Via Composer
 $ composer require zingle/laravel5-migrator
 ```
 
-Add the service provider `Zingle\LaravelMigrator\LaravelMigratorServiceProvider` to your `config/app.php` file `providers` array.
-
 Run the migration to add the path column to your migrations table:
 
-`php artisan migrate --path=vendor/Zingle/LaravelMigrator/src/migrations`
+`php artisan migrate --path=vendor/zingle/laravel5-migrator/src/migrations`
+
+Add the service provider `Zingle\LaravelMigrator\LaravelMigratorServiceProvider` to your `config/app.php` file `providers` array.
+
+
 
 ## Usage
 
