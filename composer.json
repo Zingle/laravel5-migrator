@@ -1,0 +1,42 @@
+{
+    "name": "zingle/laravel5-migrator",
+    "description": "Improved version of Laravel 5's Migrator. Adds better error messaging and support for rollbacks with custom paths",
+    "keywords": [
+        "zingle",
+        "laravel5-migrator",
+        "laravel",
+        "laravel5",
+        "migrations",
+        "rollbacks",
+        "migrator"
+    ],
+    "homepage": "https://github.com/zingle/laravel5-migrator",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nathan Jovin",
+            "email": "njovin@zingle.me",
+            "homepage": "www.zingle.me"
+        }
+    ],
+    "require": {
+        "laravel/framework": "5.*",
+        "php" : ">=5.5.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit" : "4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zingle\\LaravelMigrator\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Zingle\\LaravelMigrator\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
