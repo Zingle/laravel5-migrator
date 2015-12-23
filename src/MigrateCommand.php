@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Console\Migrations\MigrateCommand as LaravelMigrateCommand;
 use Illuminate\Console\ConfirmableTrait;
-use Illuminate\Database\Migrations\Migrator;
 use Exception;
 
 class MigrateCommand extends LaravelMigrateCommand

@@ -15,7 +15,6 @@ class LaravelMigratorServiceProvider extends LaravelServiceProvider
     {
         $this->app->singleton('migration.repository', function ($app) {
             $table = $app['config']['database.migrations'];
-
             return new DatabaseMigrationRepository($app['db'], $table);
         });
     }
