@@ -1,5 +1,4 @@
 <?php 
-use Mockery;
 
 class ResporitoryTest extends Orchestra\Testbench\TestCase
 {
