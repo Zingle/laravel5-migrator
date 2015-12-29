@@ -2,10 +2,16 @@
 
 use Illuminate\Database\Migrations\Migrator as LaravelMigrator;
 use Exception;
+use DB;
 
 class Migrator extends LaravelMigrator 
 {
+    const MIGRATOR_LOG_VERBOSITY_LOW = 1;
+    const MIGRATOR_LOG_VERBOSITY_MEDIUM = 2;
+    const MIGRATOR_LOG_VERBOSITY_HIGH = 3;
+
     public $path;
+    private $verbosity;
 
     /**
      * Override the parent runUp command to allow logging the path
@@ -23,18 +29,43 @@ class Migrator extends LaravelMigrator
         }
 
         // Improved over the parent to include the file 
+        DB::connection()->enableQueryLog();
         try {
             $migration->up();
         } catch(Exception $e) {
             $this->note("<error>Error running $file: \n\n" . $e->getMessage() . "</error>");
             throw new Exception();
         }
+        $queryLog = DB::getQueryLog();
+        $totalTime = $this->getTotalQueryTime($queryLog);
 
         $this->repository->log($file, $batch, $this->path);
-
-        $this->note("<info>Migrated:</info> $file");
+        
+        switch($this->verbosity) {
+            case self::MIGRATOR_LOG_VERBOSITY_LOW:
+                $this->note("<info>Migrated:</info> $file");    
+                break;        
+            case self::MIGRATOR_LOG_VERBOSITY_MEDIUM:
+                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $totalTime . "s) Migrated:</info> $file");
+                break;        
+            case self::MIGRATOR_LOG_VERBOSITY_HIGH:
+                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $totalTime . "s) Migrated:</info> $file");    
+                foreach($queryLog as $query) {            
+                    $statement = $this->interpolateQuery($query['query'], $query['bindings']);
+                    $this->note("    (" . $query['time'] . "s) " . $statement);                
+                }
+                break;        
+        }
+        // $this->note("<info>Log:</info>" . json_encode($queryLog));
     }
 
+    private function getTotalQueryTime($queryLog) {
+        $totalTime = 0;
+        foreach($queryLog as $query) {
+            $totalTime += $query['time'];
+        }
+        return $totalTime;    
+    }
     /**
      * Set the path being used for this migration. Allows commands using the migrator to include the path when logging.
      * @param [type] $path [description]
@@ -42,6 +73,15 @@ class Migrator extends LaravelMigrator
     public function setPath($path) 
     {
         $this->path = $path;
+    }
+
+    /**
+     * Set the path being used for this migration. Allows commands using the migrator to include the path when logging.
+     * @param [type] $path [description]
+     */
+    public function setVerbosity($verbosity) 
+    {
+        $this->verbosity = $verbosity;
     }
 
     /**
@@ -68,5 +108,32 @@ class Migrator extends LaravelMigrator
                 $this->files->requireOnce($migration->path.'/'.$migration->migration.'.php');
             }
         }
-    }    
+    } 
+    /**
+     * Replaces any parameter placeholders in a query with the value of that
+     * parameter. Useful for debugging. Assumes anonymous parameters from 
+     * $params are are in the same order as specified in $query
+     *
+     * @param string $query The sql query with parameter placeholders
+     * @param array $params The array of substitution parameters
+     * @return string The interpolated query
+     */
+    public static function interpolateQuery($query, $params) {
+        $keys = array();
+
+        # build a regular expression for each parameter
+        foreach ($params as $key => $value) {
+            if (is_string($key)) {
+                $keys[] = '/:'.$key.'/';
+            } else {
+                $keys[] = '/[?]/';
+            }
+        }
+
+        $query = preg_replace($keys, $params, $query, 1, $count);
+
+        #trigger_error('replaced '.$count.' keys');
+
+        return $query;
+    }       
 }

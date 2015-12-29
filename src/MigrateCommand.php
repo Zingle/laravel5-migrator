@@ -3,6 +3,7 @@
 use Illuminate\Database\Console\Migrations\MigrateCommand as LaravelMigrateCommand;
 use Illuminate\Console\ConfirmableTrait;
 use Exception;
+use Symfony\Component\Console\Input\InputOption;
 
 class MigrateCommand extends LaravelMigrateCommand
 {
@@ -19,6 +20,7 @@ class MigrateCommand extends LaravelMigrateCommand
             return;
         }
 
+        $this->setVerbosity();
         $this->prepareDatabase();
 
         $pretend = $this->input->getOption('pretend');
@@ -47,6 +49,24 @@ class MigrateCommand extends LaravelMigrateCommand
         }
     }
     
+    protected function setVerbosity() {
+        switch ($this->input->getOption('verbosity')) {
+            case 'low': 
+                $this->migrator->setVerbosity(Migrator::MIGRATOR_LOG_VERBOSITY_LOW);
+                break;
+            case 'high': 
+                $this->migrator->setVerbosity(Migrator::MIGRATOR_LOG_VERBOSITY_HIGH);
+                break;     
+            default: 
+                $this->migrator->setVerbosity(Migrator::MIGRATOR_LOG_VERBOSITY_MEDIUM);
+                break;                                
+        }
+    }
+    protected function getOptions() {
+        $options = parent::getOptions();
+        $options[] = ['verbosity', null, InputOption::VALUE_OPTIONAL, 'The verbosity level for migration console output. One of low, medium, or high.'];
+        return $options;
+    }
     /**
      * Write notes from the migrator to the console
      * @return [type] [description]
