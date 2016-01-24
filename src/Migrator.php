@@ -34,15 +34,16 @@ class Migrator extends LaravelMigrator
         }
 
         // Improved over the parent to include the file 
+        DB::flushQueryLog();
         DB::connection()->enableQueryLog();
         try {
             $migration->up();
         } catch(Exception $e) {
-            $this->showLog("<error>Error running $file: \n\n" . $e->getMessage() . "</error>");
+            $this->showLog($file,$batch,"<error>Error running $file: \n\n" . $e->getMessage() . "</error>");
             throw new Exception();
         }
 
-        $this->showLog();
+        $this->showLog($file,$batch);
     }
     /**
      * Raise a note event for the migrator.
@@ -58,10 +59,9 @@ class Migrator extends LaravelMigrator
             $this->notes[] = $message;
         }
     }    
-    private function showLog($error = null) {
+    private function showLog($file,$batch,$error = null) {
 
         $queryLog = DB::getQueryLog();
-        DB::flushQueryLog();
         $totalTime = $this->getTotalQueryTime($queryLog);
 
         $this->repository->log($file, $batch, $this->path);        
@@ -70,26 +70,35 @@ class Migrator extends LaravelMigrator
                 $this->note(($error ? $error : "<info>Migrated:</info> $file"));    
                 break;        
             case self::MIGRATOR_LOG_VERBOSITY_MEDIUM:
-                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $totalTime . "s) Migrated:</info> $file");
+                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $this->getDisplayTime($totalTime) . ") Migrated:</info> $file");
                 if($error) $this->note($error);
                 break;        
             case self::MIGRATOR_LOG_VERBOSITY_HIGH:
-                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $totalTime . "s) Migrated:</info> $file");    
+                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $this->getDisplayTime($totalTime) . ") Migrated:</info> $file");    
                 foreach($queryLog as $query) {            
                     $statement = $this->interpolateQuery($query['query'], $query['bindings']);
-                    $this->note("    (" . ($query['time']/1000) . "s) " . $statement);                
+                    $this->note("    (" . $this->getDisplayTime($query['time']) . ") " . $statement);                
                 }
                 if($error) $this->note($error);
                 break;        
         }        
     }
-    private function getTotalQueryTime($queryLog) {
+    private function getTotalQueryTime($queryLog) 
+    {
         $totalTime = 0;
         foreach($queryLog as $query) {
             $totalTime += $query['time'];
         }
         return $totalTime;    
     }
+    private function getDisplayTime($milliseconds) 
+    {
+        if($milliseconds < 1000) {
+            return $milliseconds . 'ms';
+        } else {
+            return round($milliseconds/1000,2) . 's';
+        }
+    }       
     /**
      * Set the path being used for this migration. Allows commands using the migrator to include the path when logging.
      * @param [type] $path [description]
