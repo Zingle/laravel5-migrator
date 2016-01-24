@@ -12,7 +12,12 @@ class Migrator extends LaravelMigrator
 
     public $path;
     private $verbosity;
+    private $consoleOutput;
 
+    public function run($path, $pretend = false, $output = null) {
+        $this->consoleOutput = $output;
+        parent::run($path,$pretend);
+    }
     /**
      * Override the parent runUp command to allow logging the path
      *
@@ -33,32 +38,51 @@ class Migrator extends LaravelMigrator
         try {
             $migration->up();
         } catch(Exception $e) {
-            $this->note("<error>Error running $file: \n\n" . $e->getMessage() . "</error>");
+            $this->showLog("<error>Error running $file: \n\n" . $e->getMessage() . "</error>");
             throw new Exception();
         }
+
+        $this->showLog();
+    }
+    /**
+     * Raise a note event for the migrator.
+     *
+     * @param  string  $message
+     * @return void
+     */
+    protected function note($message)
+    {
+        if($this->consoleOutput) {
+            $this->consoleOutput->writeln($message);
+        } else {
+            $this->notes[] = $message;
+        }
+    }    
+    private function showLog($error = null) {
+
         $queryLog = DB::getQueryLog();
+        DB::flushQueryLog();
         $totalTime = $this->getTotalQueryTime($queryLog);
 
-        $this->repository->log($file, $batch, $this->path);
-        
+        $this->repository->log($file, $batch, $this->path);        
         switch($this->verbosity) {
             case self::MIGRATOR_LOG_VERBOSITY_LOW:
-                $this->note("<info>Migrated:</info> $file");    
+                $this->note(($error ? $error : "<info>Migrated:</info> $file"));    
                 break;        
             case self::MIGRATOR_LOG_VERBOSITY_MEDIUM:
                 $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $totalTime . "s) Migrated:</info> $file");
+                if($error) $this->note($error);
                 break;        
             case self::MIGRATOR_LOG_VERBOSITY_HIGH:
                 $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $totalTime . "s) Migrated:</info> $file");    
                 foreach($queryLog as $query) {            
                     $statement = $this->interpolateQuery($query['query'], $query['bindings']);
-                    $this->note("    (" . $query['time'] . "s) " . $statement);                
+                    $this->note("    (" . ($query['time']/1000) . "s) " . $statement);                
                 }
+                if($error) $this->note($error);
                 break;        
-        }
-        // $this->note("<info>Log:</info>" . json_encode($queryLog));
+        }        
     }
-
     private function getTotalQueryTime($queryLog) {
         $totalTime = 0;
         foreach($queryLog as $query) {

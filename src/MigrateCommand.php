@@ -35,14 +35,9 @@ class MigrateCommand extends LaravelMigrateCommand
         $this->migrator->setPath($path);
 
         // Improved over the parent to display notes when an exception is thrown
-        try {
-            $this->migrator->run($path, $pretend);
-        } catch(Exception $e) {
-            $this->displayNotes(); 
-            throw $e;     
-        }
+        $this->migrator->run($path, $pretend, $this->output);
+        throw $e;     
 
-        $this->displayNotes();
 
         if ($this->input->getOption('seed')) {
             $this->call('db:seed', ['--force' => true]);
