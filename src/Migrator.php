@@ -13,6 +13,8 @@ class Migrator extends LaravelMigrator
     public $path;
     private $verbosity;
     private $consoleOutput;
+    private $totalTime = 0;
+    private $totalQueryCount = 0;
 
     public function run($path, $pretend = false, $output = null) {
         $this->consoleOutput = $output;
@@ -37,9 +39,10 @@ class Migrator extends LaravelMigrator
         DB::flushQueryLog();
         DB::connection()->enableQueryLog();
         try {
+            $this->note("<info>Migrating:</info> $file");
             $migration->up();
         } catch(Exception $e) {
-            $this->showLog($file,$batch,"<error>Error running $file: \n\n" . $e->getMessage() . "</error>");
+            $this->showLog($file,$batch,"<error>Error: \n\n" . $e->getMessage() . "</error>");
             throw new Exception();
         }
 
@@ -62,7 +65,10 @@ class Migrator extends LaravelMigrator
     private function showLog($file,$batch,$error = null) {
 
         $queryLog = DB::getQueryLog();
-        $totalTime = $this->getTotalQueryTime($queryLog);
+        $batchTime = $this->getTotalQueryTime($queryLog);
+        $this->totalTime += $batchTime;
+        $this->totalQueryCount += count($queryLog);
+
 
         $this->repository->log($file, $batch, $this->path);        
         switch($this->verbosity) {
@@ -70,26 +76,29 @@ class Migrator extends LaravelMigrator
                 $this->note(($error ? $error : "<info>Migrated:</info> $file"));    
                 break;        
             case self::MIGRATOR_LOG_VERBOSITY_MEDIUM:
-                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $this->getDisplayTime($totalTime) . ") Migrated:</info> $file");
+                $this->note("<info>Complete (" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $this->getDisplayTime($batchTime) . ", Total " . $this->totalQueryCount . ' ' . ($this->totalQueryCount == 1 ? "query" : "queries") . ' in ' . $this->getDisplayTime($this->totalTime) . ")</info>");
                 if($error) $this->note($error);
                 break;        
             case self::MIGRATOR_LOG_VERBOSITY_HIGH:
-                $this->note("<info>(" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $this->getDisplayTime($totalTime) . ") Migrated:</info> $file");    
                 foreach($queryLog as $query) {            
                     $statement = $this->interpolateQuery($query['query'], $query['bindings']);
                     $this->note("    (" . $this->getDisplayTime($query['time']) . ") " . $statement);                
                 }
-                if($error) $this->note($error);
+                if($error) {
+                    $this->note($error);
+                } else {
+                    $this->note("<info>Complete (" . count($queryLog) . " " . (count($queryLog) == 1 ? "query" : "queries") . " in " . $this->getDisplayTime($batchTime) . ", Total " . $this->totalQueryCount . ' ' . ($this->totalQueryCount == 1 ? "query" : "queries") . ' in ' . $this->getDisplayTime($this->totalTime) . ")</info>");    
+                }
                 break;        
         }        
     }
     private function getTotalQueryTime($queryLog) 
     {
-        $totalTime = 0;
+        $batchTime = 0;
         foreach($queryLog as $query) {
-            $totalTime += $query['time'];
+            $batchTime += $query['time'];
         }
-        return $totalTime;    
+        return $batchTime;    
     }
     private function getDisplayTime($milliseconds) 
     {
