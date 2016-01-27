@@ -22,6 +22,6 @@ class AddPathToDbMigrations extends Migration
      */
     public function down()
     {
-        DB::statement("ALTER TABLE " . config('database.migrations') . " DELETE COLUMN path");
+        DB::statement("ALTER TABLE " . config('database.migrations') . " DELETE COLUMN path"); 
     }
 }
