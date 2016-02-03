@@ -41,6 +41,7 @@ class Migrator extends LaravelMigrator
         try {
             $this->note("<info>Migrating:</info> $file");
             $migration->up();
+            $this->repository->log($file, $batch, $this->path);        
         } catch(Exception $e) {
             $this->showLog($file,$batch,"<error>Error: \n\n" . $e->getMessage() . "</error>");
             throw new Exception();
@@ -70,7 +71,6 @@ class Migrator extends LaravelMigrator
         $this->totalQueryCount += count($queryLog);
 
 
-        $this->repository->log($file, $batch, $this->path);        
         switch($this->verbosity) {
             case self::MIGRATOR_LOG_VERBOSITY_LOW:
                 $this->note(($error ? $error : "<info>Migrated:</info> $file"));    
