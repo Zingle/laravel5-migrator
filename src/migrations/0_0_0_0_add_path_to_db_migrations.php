@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
 class AddPathToDbMigrations extends Migration
@@ -12,7 +11,9 @@ class AddPathToDbMigrations extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE " . config('database.migrations') . " ADD COLUMN path VARCHAR(255) DEFAULT NULL AFTER migration ");
+        Schema::table(config('database.migrations'), function ($table) {
+            $table->string('path')->after('migration');
+        });
     }
 
     /**
@@ -22,6 +23,8 @@ class AddPathToDbMigrations extends Migration
      */
     public function down()
     {
-        DB::statement("ALTER TABLE " . config('database.migrations') . " DELETE COLUMN path");
+        Schema::table(config('database.migrations'), function ($table) {
+            $table->dropColumn('path');
+        });
     }
 }
